@@ -107,7 +107,7 @@ def check_pixels(board, grid_size, start_x, start_y, width, height, target_indic
             if (x, y) not in checked_positions:
                 checked_positions.add((x, y))
                 board_color = board[y * grid_size + x]
-                expected_index = target_indices[y][x]
+                expected_index = target_indices[(y - start_y) % height][(x - start_x) % width]
                 if expected_index != 99 and board_color != color_list[expected_index]:
                     send_pixel_correction(x, y, expected_index)
                     return False
