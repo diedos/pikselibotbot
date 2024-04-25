@@ -85,6 +85,12 @@ def send_pixel_correction(x, y, correct_index):
         print("Response text:", response.text)
 
 
+def forbidden(x, y):
+    if x >= 100 and x <= 115 and y >= 42 and y <= 68:
+        return True
+    return False
+
+
 def check_pixels(board, grid_size, start_x, start_y, width, height, target_indices, mode):
     if mode == "sequential":
         for y in range(height):
@@ -93,7 +99,7 @@ def check_pixels(board, grid_size, start_x, start_y, width, height, target_indic
                 index_y = start_y + y
                 board_color = board[index_y * grid_size + index_x]
                 expected_index = target_indices[y][x]
-                if expected_index != 99 and board_color != color_list[expected_index]:
+                if expected_index != 99 and board_color != color_list[expected_index] and not forbidden(index_x, index_y):
                     send_pixel_correction(index_x, index_y, expected_index)
                     return False
         return True
@@ -108,7 +114,7 @@ def check_pixels(board, grid_size, start_x, start_y, width, height, target_indic
                 checked_positions.add((x, y))
                 board_color = board[y * grid_size + x]
                 expected_index = target_indices[(y - start_y) % height][(x - start_x) % width]
-                if expected_index != 99 and board_color != color_list[expected_index]:
+                if expected_index != 99 and board_color != color_list[expected_index] and not forbidden(x, y):
                     send_pixel_correction(x, y, expected_index)
                     return False
             attempts += 1
