@@ -65,18 +65,27 @@ def fetch_board():
     return response.json()
 
 
-def generate_token(color):
-    t = f'{USER_ID}0{color}'  # A new UUID if dynamic, or a constant if the same always used
-    e = int(time.time()) // 10 # timestamp for token generation 
+def generate_token(color, separator):
+    t = f'{USER_ID}{separator}{color}'
+    print(t)
+    e = int(time.time()) // 10 # timestamp for token generation
     s = encode_string(t, instance.exports.__wbindgen_export_0, instance.exports.__wbindgen_export_1)
+    u = calculate_u(t)
     o = instance.exports.__wbindgen_add_to_stack_pointer(-16)
     try:
-        instance.exports.create_token(o, s, 26, e)
+        instance.exports.create_token(o, s, u, e)
         x = read_memory(instance, o)
         #dump_memory(instance, f'{e}.txt')
         return decode_string(instance, x, 64)  # Final token processing
     finally:
         instance.exports.__wbindgen_add_to_stack_pointer(16)
+
+
+def calculate_u(t):
+    for o, char in enumerate(t):
+        if ord(char) > 127:
+            return o
+    return len(t)
 
 
 def dump_memory(instance, dump_file_path):
@@ -139,7 +148,7 @@ def forbidden(x, y):
     return False
 
 
-def send_pixel_correction(x, y, correct_index):
+def send_pixel_correction(x, y, correct_index, try_separator):
     o = 1048560
     s = 1114120
     u = 24
@@ -148,7 +157,7 @@ def send_pixel_correction(x, y, correct_index):
         "pixels": [{"x": x, "y": y, "color": correct_index}],
         "userId": USER_ID,
         "adminMode": False,
-        "validationToken": generate_token(correct_index)
+        "validationToken": generate_token(correct_index, try_separator)
     }
     response = requests.post(URL, data=json.dumps(
         payload), headers=headers)
@@ -161,6 +170,8 @@ def send_pixel_correction(x, y, correct_index):
         print("HTTP error occurred:", err)
         print("Response status code:", response.status_code)
         print("Response text:", response.text)
+        if try_separator == 0:
+            send_pixel_correction(x, y, correct_index, 1)
 
 
 def check_pixels(board, grid_size, start_x, start_y, width, height, target_indices, mode):
@@ -172,7 +183,7 @@ def check_pixels(board, grid_size, start_x, start_y, width, height, target_indic
                 board_color = board[index_y * grid_size + index_x]
                 expected_index = target_indices[y][x]
                 if expected_index != 99 and board_color != color_list[expected_index] and not forbidden(index_x, index_y):
-                    send_pixel_correction(index_x, index_y, expected_index)
+                    send_pixel_correction(index_x, index_y, expected_index, 0)
                     return False
         return True
     elif mode == "random":
@@ -187,7 +198,7 @@ def check_pixels(board, grid_size, start_x, start_y, width, height, target_indic
                 board_color = board[y * grid_size + x]
                 expected_index = target_indices[(y - start_y) % height][(x - start_x) % width]
                 if expected_index != 99 and board_color != color_list[expected_index] and not forbidden(x, y):
-                    send_pixel_correction(x, y, expected_index)
+                    send_pixel_correction(x, y, expected_index, 0)
                     return False
             attempts += 1
 
