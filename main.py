@@ -70,15 +70,24 @@ def generate_token(color, separator):
     print(t)
     e = int(time.time()) // 10 # timestamp for token generation
     s = encode_string(t, instance.exports.__wbindgen_export_0, instance.exports.__wbindgen_export_1)
-    u = calculate_u(t)
+    u = calculate_u(USER_ID)
+    print(f'u: {u}')
     o = instance.exports.__wbindgen_add_to_stack_pointer(-16)
+
+    print(not Qe(t))
+    print(0 if Qe(e) else e)
+
     try:
-        instance.exports.create_token(o, s, u, e)
+        instance.exports.create_token(o, s, u, not Qe(t), 0 if Qe(e) else e)
         x = read_memory(instance, o)
         #dump_memory(instance, f'{e}.txt')
         return decode_string(instance, x, 64)  # Final token processing
     finally:
         instance.exports.__wbindgen_add_to_stack_pointer(16)
+
+
+def Qe(t):
+    return t is None
 
 
 def calculate_u(t):
